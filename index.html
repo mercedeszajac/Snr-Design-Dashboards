@@ -3,54 +3,275 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Energy Dashboard Collection</title>
+  <title>Energy Systems Project | Table of Contents</title>
+
   <style>
+    :root {
+      --background: #f6f4ee;
+      --card: #ffffff;
+      --text: #182b43;
+      --muted: #506176;
+      --accent: #006e64;
+      --border: #cbd3da;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      max-width: 800px;
-      margin: 60px auto;
-      padding: 0 24px;
-      background: #f6f4ee;
-      color: #182b43;
-      font: 18px/1.6 system-ui, sans-serif;
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+      font: 17px/1.65 system-ui, sans-serif;
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 56px 24px;
+    }
+
+    header {
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(30px, 5vw, 44px);
+      line-height: 1.2;
+    }
+
+    header p {
+      max-width: 760px;
+      color: var(--muted);
+    }
+
+    .contents {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      padding: 28px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-top: 5px solid var(--accent);
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgb(24 43 67 / 5%);
+    }
+
+    .week {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 15px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 26px;
+      line-height: 1.3;
+      font-weight: 800;
+    }
+
+    .card p {
+      margin: 0 0 14px;
+    }
+
+    h3 {
+      margin: 8px 0;
+      font-size: 17px;
+    }
+
+    ul {
+      margin: 0 0 24px;
+      padding-left: 22px;
     }
 
     li {
-      margin: 18px 0;
+      margin: 6px 0;
     }
 
-    a {
-      color: #006e64;
+    .button {
+      align-self: flex-start;
+      margin-top: auto;
+      padding: 11px 18px;
+      border: 2px solid var(--accent);
+      border-radius: 7px;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .button:hover {
+      background: #00564e;
+      border-color: #00564e;
+    }
+
+    a:focus-visible {
+      outline: 3px solid #b35400;
+      outline-offset: 4px;
+    }
+
+    footer {
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    @media (max-width: 740px) {
+      .contents {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 32px 18px;
+      }
+
+      .card {
+        padding: 24px;
+      }
     }
   </style>
 </head>
+
 <body>
-  <h1>Energy Dashboard Collection</h1>
-  <p>Select a Dashboard to Explore.</p>
+  <main>
+    <header>
+      <h1>Energy Systems Project</h1>
+      <p>
+        A weekly collection of interactive dashboards exploring electricity
+        demand, generation planning, California energy data, and optimization.
+        Select a week below to explore the work.
+      </p>
+    </header>
 
-  <ul>
-    <li>
-      <a href="./Week1_Solar+Battery.html">
-        Week 1 — Solar &amp; Battery Explorer
-      </a>
-    </li>
+    <nav class="contents" aria-label="Weekly dashboard table of contents">
 
-    <li>
-      <a href="./Week2_Capacity+Expansion.html">
-        Week 2 — Capacity Expansion Overview
-      </a>
-    </li>
+      <article class="card">
+        <p class="week">Week 1</p>
+        <h2>Solar &amp; Battery Explorer</h2>
 
-    <li>
-      <a href="./Week3_CCA_Robust+Optimization.html">
-        Week 3 — CCA Comparison &amp; Robust Optimization
-      </a>
-    </li>
+        <p>
+          <strong>Goal:</strong> Explore how household electricity demand,
+          solar generation, and battery storage interact.
+        </p>
 
-    <li>
-      <a href="./Week4_California+Capacity+Expansion.html">
-        Week 4 — California Capacity Expansion
-      </a>
-    </li>
-  </ul>
+        <p>
+          An introductory interactive dashboard showing how changes in
+          energy settings affect a household’s electricity balance.
+        </p>
+
+        <h3>What’s included</h3>
+        <ul>
+          <li>Household demand and solar generation profiles</li>
+          <li>Battery storage and grid electricity interaction</li>
+          <li>Interactive settings for exploring different conditions</li>
+        </ul>
+
+        <a class="button" href="./Week1_Solar+Battery.html">
+          Open Week 1 dashboard
+        </a>
+      </article>
+
+      <article class="card">
+        <p class="week">Week 2</p>
+        <h2>Capacity Expansion Overview</h2>
+
+        <p>
+          <strong>Goal:</strong> Visualize the generation planning concepts
+          explored in Notebook 3.
+        </p>
+
+        <p>
+          A dashboard introducing how technology costs and electricity demand
+          influence generation capacity decisions.
+        </p>
+
+        <h3>What’s included</h3>
+        <ul>
+          <li>Notebook 3 capacity expansion concepts and results</li>
+          <li>Generation technology comparisons</li>
+          <li>Investment and operating cost tradeoffs</li>
+        </ul>
+
+        <a class="button" href="./Week2_Capacity+Expansion.html">
+          Open Week 2 dashboard
+        </a>
+      </article>
+
+      <article class="card">
+        <p class="week">Week 3</p>
+        <h2>CCA Comparison &amp; Robust Optimization</h2>
+
+        <p>
+          <strong>Goal:</strong> Explore California Community Choice
+          Aggregator data and examine planning under cost uncertainty.
+        </p>
+
+        <p>
+          Two separate analyses: a comparison of 13 CCAs and robust
+          optimization results using the Notebook 3 course dataset.
+        </p>
+
+        <h3>What’s included</h3>
+        <ul>
+          <li>California CCA data and interactive comparisons</li>
+          <li>Generation capacity and technology information where available</li>
+          <li>Robust optimization results for Gamma 0, 2, and 6</li>
+          <li>Costs and investment decisions under fixed-cost uncertainty</li>
+        </ul>
+
+        <a class="button" href="./Week3_CCA_Robust+Optimization.html">
+          Open Week 3 dashboard
+        </a>
+      </article>
+
+      <article class="card">
+        <p class="week">Week 4</p>
+        <h2>California Capacity Expansion</h2>
+
+        <p>
+          <strong>Goal:</strong> Apply capacity expansion modeling to
+          sourced California system inputs.
+        </p>
+
+        <p>
+          Two validated hypothetical CAISO greenfield benchmarks:
+          gas-only and gas plus renewables. The renewable case combines
+          2025 demand, 2026 candidate availability, and 2022 weather profiles.
+        </p>
+
+        <h3>What’s included</h3>
+        <ul>
+          <li>Optimized capacity, annual generation, and domestic modeled costs</li>
+          <li>Hourly dispatch and modeled unmet demand</li>
+          <li>Interactive demand and renewable profile exploration</li>
+          <li>Sources, assumptions, validation, and downloadable summaries</li>
+          <li>Documented data gaps preventing a brownfield solution</li>
+        </ul>
+
+        <a class="button" href="./Week4_California+Capacity+Expansion.html">
+          Open Week 4 dashboard
+        </a>
+      </article>
+
+    </nav>
+
+    <footer>
+      Each dashboard represents the scope and assumptions of its weekly
+      study. Modeled results are hypothetical planning outcomes.
+      Sources and limitations are provided within the dashboards where available.
+    </footer>
+  </main>
 </body>
 </html>
