@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111714">
+  <title>Capacity Expansion | Energy System Optimization</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111714;
+      --surface: #19221e;
+      --surface-raised: #202b26;
+      --ink: #f0f2e9;
+      --muted: #a4b1a9;
+      --line: #35433c;
+      --lime: #d7ff70;
+      --mint: #7de1c7;
+      --orange: #ff9a68;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, #17201b 0, var(--bg) 430px, #141b17 100%);
+      font: 16px/1.55 var(--sans);
+    }
+    a { color: inherit; }
+    .wrap { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+    .topbar {
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .wordmark {
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .wordmark span { color: var(--lime); margin-left: 8px; }
+    .nav { display: flex; flex-wrap: wrap; gap: 22px; }
+    .nav a {
+      color: var(--muted);
+      font-size: 12px;
+      text-decoration: none;
+    }
+    .nav a:hover, .nav a:focus-visible { color: var(--lime); }
+    .top-status {
+      color: var(--mint);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 1.2px;
+      white-space: nowrap;
+    }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(280px, .75fr);
+      gap: 72px;
+      align-items: end;
+      padding: 80px 0 64px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow, .section-kicker {
+      margin: 0 0 16px;
+      color: var(--mint);
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 1.7px;
+      text-transform: uppercase;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 720px;
+      margin-bottom: 20px;
+      font: 400 62px/1.02 var(--serif);
+    }
+    h1 em { color: var(--lime); font-weight: 400; }
+    .hero-copy {
+      max-width: 620px;
+      margin: 0;
+      color: #c1cbc4;
+      font-size: 17px;
+    }
+    .solver-stamp {
+      padding: 21px 23px 20px;
+      border: 1px solid #536449;
+      border-top: 3px solid var(--lime);
+      background: rgba(25, 34, 30, .82);
+    }
+    .stamp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 27px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .optimal { color: var(--lime); font-weight: 750; letter-spacing: 1px; }
+    .stamp-label {
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 1.25px;
+    }
+    .objective-value {
+      display: block;
+      color: var(--ink);
+      font: 400 32px/1.2 var(--serif);
+      white-space: nowrap;
+    }
+    .objective-unit { color: var(--lime); font-size: 12px; }
+    .stamp-note { margin: 14px 0 0; color: var(--muted); font-size: 11px; }
+
+    .section { padding: 54px 0 60px; border-bottom: 1px solid var(--line); }
+    .section-heading {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 28px;
+    }
+    .section-number { color: var(--orange); font: 400 22px var(--serif); }
+    h2 { margin: 0; font: 400 34px/1.15 var(--serif); }
+    .section-lead { max-width: 720px; margin: -12px 0 30px 82px; color: var(--muted); }
+    .objective-band {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0 0 35px 82px;
+      padding: 16px 18px;
+      border-left: 2px solid var(--lime);
+      background: var(--surface);
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .objective-band strong { color: var(--lime); font-size: 11px; letter-spacing: 1px; }
+    .objective-band .arrow { color: var(--orange); font-size: 19px; }
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-left: 82px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .decision-item { min-height: 150px; padding: 21px 22px 18px 0; }
+    .decision-item + .decision-item { padding-left: 22px; border-left: 1px solid var(--line); }
+    .variable {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .variable strong { color: var(--lime); font: 400 25px var(--serif); }
+    .unit { color: var(--orange); font-size: 11px; font-weight: 700; }
+    .decision-item p { margin: 0; color: var(--muted); font-size: 13px; }
+    .constraint-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+      margin: 27px 0 0 82px;
+    }
+    .constraint {
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+    .constraint h3 { margin-bottom: 7px; color: var(--mint); font-size: 12px; }
+    .constraint p { margin: 0; color: var(--muted); font-size: 13px; }
+    .constraint code { color: var(--ink); font: 13px var(--sans); }
+
+    .demand-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin: 0 0 24px 82px;
+    }
+    .demand-head p { max-width: 650px; margin: 0; color: var(--muted); font-size: 13px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(100px, 1fr));
+      gap: 22px;
+      margin: 0 0 20px 82px;
+    }
+    .stat { border-top: 1px solid var(--line); padding-top: 10px; }
+    .stat span { display: block; color: var(--muted); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+    .stat strong { font: 400 24px var(--serif); }
+    .stat small { color: var(--mint); font-size: 12px; }
+    .chart-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 205px;
+      gap: 18px;
+      align-items: start;
+      margin-left: 82px;
+    }
+    .chart-frame {
+      position: relative;
+      margin-left: 0;
+      padding: 14px 16px 4px;
+      background: #151d19;
+      border: 1px solid var(--line);
+    }
+    .rank-note {
+      margin: 0;
+      padding: 15px 14px;
+      border-left: 2px solid var(--mint);
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .rank-note strong { display: block; margin-bottom: 7px; color: var(--lime); }
+    .chart-frame svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+    .chart-grid { stroke: #34423a; stroke-width: 1; }
+    .chart-tick, .chart-label { fill: #a4b1a9; font: 12px var(--sans); }
+    .chart-label { fill: #d0d8d1; font-size: 13px; }
+    .chart-area { fill: url(#curveFill); }
+    .chart-line { fill: none; stroke: var(--lime); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+    .chart-marker { fill: var(--orange); stroke: #151d19; stroke-width: 3; vector-effect: non-scaling-stroke; }
+    .chart-hit { fill: transparent; cursor: crosshair; }
+    .chart-tooltip {
+      position: absolute;
+      z-index: 2;
+      min-width: 158px;
+      padding: 9px 11px;
+      color: var(--ink);
+      background: #26332c;
+      border: 1px solid #536449;
+      box-shadow: 0 8px 20px #0005;
+      font-size: 11px;
+      pointer-events: none;
+    }
+    .chart-tooltip[hidden] { display: none; }
+    .chart-tooltip strong { color: var(--lime); }
+    .chart-note { margin: 12px 0 0 82px; color: var(--muted); font-size: 11px; }
+    .range-row {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr) minmax(210px, 300px);
+      gap: 14px;
+      align-items: center;
+      margin: 20px 0 0 82px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    input[type="range"] { width: 100%; accent-color: var(--lime); }
+    .range-value { min-width: 0; max-width: 300px; text-align: right; color: var(--ink); }
+    .data-status { margin: 10px 0 0 82px; color: var(--mint); font-size: 11px; }
+
+    .options-intro { max-width: 760px; margin: -12px 0 27px 82px; color: var(--muted); font-size: 13px; }
+    .cost-table-wrap { margin-left: 82px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 11px 12px; color: var(--mint); border-bottom: 1px solid #617064; font-size: 10px; letter-spacing: .8px; text-transform: uppercase; }
+    td { padding: 13px 12px; border-bottom: 1px solid var(--line); font-size: 13px; }
+    td:first-child { color: var(--ink); font-weight: 700; }
+    td:not(:first-child) { font-variant-numeric: tabular-nums; }
+    .cost-unit { color: var(--muted); font-size: 10px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+    .tradeoff {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin: 28px 0 0 82px;
+    }
+    .tradeoff p { margin: 0; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+    .tradeoff strong { color: var(--ink); }
+    .approx-note {
+      margin: 25px 0 0 82px;
+      padding: 16px 18px;
+      border-left: 2px solid var(--orange);
+      background: var(--surface);
+      color: #c1cbc4;
+      font-size: 12px;
+    }
+    .approx-note strong { color: var(--orange); }
+
+    .extension-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-left: 82px;
+    }
+    .extension { padding-top: 15px; border-top: 1px solid var(--line); }
+    .extension .status { display: block; margin-bottom: 13px; color: var(--orange); font-size: 10px; font-weight: 750; letter-spacing: 1px; text-transform: uppercase; }
+    .extension h3 { margin-bottom: 8px; font: 400 23px var(--serif); }
+    .extension p { margin: 0; color: var(--muted); font-size: 13px; }
+    .formula {
+      display: block;
+      margin: 14px 0;
+      padding: 11px 13px;
+      background: var(--surface);
+      color: var(--lime);
+      font-size: 12px;
+    }
+    .assumptions {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 26px;
+      padding: 24px 0 28px;
+    }
+    .assumptions h2 { font-size: 21px; }
+    .assumptions p { margin: 0; color: var(--muted); font-size: 12px; }
+    footer { padding: 18px 0 28px; color: var(--muted); font-size: 10px; }
+    .noscript { color: var(--orange); }
+
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 32px, 580px); }
+      .topbar { min-height: 58px; flex-wrap: wrap; padding: 12px 0; }
+      .nav { order: 3; width: 100%; gap: 17px; }
+      .top-status { font-size: 9px; }
+      .hero { grid-template-columns: 1fr; gap: 30px; padding: 52px 0 42px; }
+      h1 { font-size: 48px; }
+      .solver-stamp { max-width: 420px; }
+      .section { padding: 40px 0 44px; }
+      .section-heading { grid-template-columns: 45px minmax(0, 1fr); gap: 8px; }
+      h2 { font-size: 29px; }
+      .section-lead, .objective-band, .decision-grid, .constraint-grid,
+      .demand-head, .stats, .chart-layout, .chart-note, .range-row,
+      .data-status, .options-intro, .cost-table-wrap, .tradeoff,
+      .approx-note, .extension-grid { margin-left: 53px; }
+      .objective-band { flex-wrap: wrap; gap: 8px; }
+      .decision-grid { grid-template-columns: 1fr; }
+      .decision-item { min-height: auto; padding: 17px 0; }
+      .decision-item + .decision-item { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+      .constraint-grid, .tradeoff, .extension-grid { grid-template-columns: 1fr; gap: 18px; }
+      .chart-layout { grid-template-columns: 1fr; }
+      .demand-head { display: block; }
+      .demand-head p { margin-top: 10px; }
+      .stats { gap: 12px; }
+      .stat strong { font-size: 20px; }
+      .chart-frame { padding: 8px 4px 2px; }
+      .chart-tick { font-size: 15px; }
+      .chart-label { font-size: 16px; }
+      .range-row { grid-template-columns: 1fr; gap: 8px; }
+      .range-value { min-width: 0; max-width: none; text-align: left; }
+      .cost-table-wrap { margin-right: -4px; }
+      table { min-width: 590px; }
+      .assumptions { grid-template-columns: 1fr; gap: 8px; }
+    }
+    @media (max-width: 430px) {
+      .section-lead, .objective-band, .decision-grid, .constraint-grid,
+      .demand-head, .stats, .chart-layout, .chart-note, .range-row,
+      .data-status, .options-intro, .cost-table-wrap, .tradeoff,
+      .approx-note, .extension-grid { margin-left: 0; }
+      .objective-band { font-size: 12px; }
+      .section-heading { margin-bottom: 22px; }
+      .range-row { grid-template-columns: 1fr; }
+      .chart-tooltip { min-width: 135px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <a class="wordmark" href="#top">Energy system optimization<span>03</span></a>
+      <nav class="nav" aria-label="Page sections">
+        <a href="#model">Model</a>
+        <a href="#demand">Demand</a>
+        <a href="#options">Options</a>
+        <a href="#extensions">Extensions</a>
+      </nav>
+      <div class="top-status">SOLVED THERMAL CASE</div>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">A short guide to capacity planning</p>
+          <h1 id="page-title">Capacity expansion,<br><em>made legible.</em></h1>
+          <p class="hero-copy">Choose the capacity to build and the electricity to produce each hour, minimizing annual fixed costs, operating costs, and penalties for unmet demand.</p>
+        </div>
+        <aside class="solver-stamp" aria-label="Saved solver result">
+          <div class="stamp-head"><span class="optimal">● OPTIMAL</span><span>HiGHS · linear program</span></div>
+          <p class="stamp-label">SAVED ANNUAL OBJECTIVE</p>
+          <strong class="objective-value">$847,965,425</strong>
+          <span class="objective-unit">per year · thermal-only case</span>
+          <p class="stamp-note">Saved annual objective, rounded to the nearest dollar. This page does not run the model.</p>
+        </aside>
+      </section>
+
+      <section class="section" id="model" aria-labelledby="model-title">
+        <div class="section-heading">
+          <span class="section-number">01</span>
+          <h2 id="model-title">What the model decides</h2>
+        </div>
+        <p class="section-lead">A least-cost fleet is chosen to cover forecast demand across 8,760 one-hour intervals.</p>
+        <div class="objective-band" aria-label="Objective in plain language">
+          <strong>MINIMIZE</strong>
+          <span>Annual fixed costs</span><span>+</span>
+          <span>Hourly operating costs</span><span>+</span>
+          <span>Penalties for unmet demand</span><span class="arrow">→</span>
+          <strong>LOWEST TOTAL COST</strong>
+        </div>
+        <div class="decision-grid">
+          <article class="decision-item">
+            <div class="variable"><strong>CAP</strong><span class="unit">MW</span></div>
+            <p>Capacity built by each technology. Fixed costs are annualized per MW of capacity.</p>
+          </article>
+          <article class="decision-item">
+            <div class="variable"><strong>GEN</strong><span class="unit">MWh / interval</span></div>
+            <p>Electricity generated by each plant in each one-hour interval. Operating costs apply to each MWh.</p>
+          </article>
+          <article class="decision-item">
+            <div class="variable"><strong>NSE</strong><span class="unit">MWh / interval</span></div>
+            <p>Non-served energy: demand left unsupplied. The modeled penalty is $9,000 per MWh.</p>
+          </article>
+        </div>
+        <div class="constraint-grid">
+          <div class="constraint">
+            <h3>Balance, every hour</h3>
+            <p><code>Generation + non-served energy = demand</code></p>
+          </div>
+          <div class="constraint">
+            <h3>Capacity, every plant and hour</h3>
+            <p><code>Hourly average output (MW) cannot exceed installed capacity (MW).</code> Hourly energy (MWh) equals average output (MW) multiplied by the one-hour interval.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="demand" aria-labelledby="demand-title">
+        <div class="section-heading">
+          <span class="section-number">02</span>
+          <h2 id="demand-title">Demand, ranked by size</h2>
+        </div>
+        <div class="demand-head">
+          <p>The saved cumulative-distribution plot contains all 8,760 demand observations sorted from lowest to highest. Reversed here, they form a full-year load-duration curve, not a timeline.</p>
+        </div>
+        <div class="stats" aria-label="Demand statistics calculated from the saved observations">
+          <div class="stat"><span>Minimum</span><strong id="stat-min">1,306</strong> <small>MW</small></div>
+          <div class="stat"><span>Mean</span><strong id="stat-mean">2,576.24</strong> <small>MW</small></div>
+          <div class="stat"><span>Peak</span><strong id="stat-peak">4,813</strong> <small>MW</small></div>
+        </div>
+        <div class="chart-layout">
+          <div class="chart-frame" id="chart-frame">
+          <svg id="demand-chart" viewBox="0 0 1000 390" role="img" aria-labelledby="chart-title chart-desc">
+            <title id="chart-title">Load-duration curve from saved demand observations</title>
+            <desc id="chart-desc">Hourly average power, sorted from highest to lowest, across 8,760 ranked intervals. Move over the curve or use the slider to inspect a value.</desc>
+            <defs>
+              <linearGradient id="curveFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#d7ff70" stop-opacity=".22"></stop>
+                <stop offset="1" stop-color="#d7ff70" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <g aria-hidden="true">
+              <line class="chart-grid" x1="82" x2="970" y1="300" y2="300"></line>
+              <line class="chart-grid" x1="82" x2="970" y1="245" y2="245"></line>
+              <line class="chart-grid" x1="82" x2="970" y1="190" y2="190"></line>
+              <line class="chart-grid" x1="82" x2="970" y1="135" y2="135"></line>
+              <line class="chart-grid" x1="82" x2="970" y1="80" y2="80"></line>
+              <line class="chart-grid" x1="82" x2="970" y1="25" y2="25"></line>
+              <text class="chart-tick" x="70" y="304" text-anchor="end">0</text>
+              <text class="chart-tick" x="70" y="249" text-anchor="end">1,000</text>
+              <text class="chart-tick" x="70" y="194" text-anchor="end">2,000</text>
+              <text class="chart-tick" x="70" y="139" text-anchor="end">3,000</text>
+              <text class="chart-tick" x="70" y="84" text-anchor="end">4,000</text>
+              <text class="chart-tick" x="70" y="29" text-anchor="end">5,000</text>
+              <text class="chart-tick" x="82" y="324" text-anchor="middle">1</text>
+              <text class="chart-tick" x="284" y="324" text-anchor="middle">2,000</text>
+              <text class="chart-tick" x="486" y="324" text-anchor="middle">4,000</text>
+              <text class="chart-tick" x="688" y="324" text-anchor="middle">6,000</text>
+              <text class="chart-tick" x="970" y="324" text-anchor="middle">8,760</text>
+              <text class="chart-label" x="526" y="365" text-anchor="middle">Hours ranked by demand</text>
+              <text class="chart-label" transform="translate(18 164) rotate(-90)" text-anchor="middle">Average power (MW)</text>
+            </g>
+            <path class="chart-area" id="curve-area"></path>
+            <path class="chart-line" id="curve-line"></path>
+            <circle class="chart-marker" id="curve-marker" cx="82" cy="35" r="5"></circle>
+            <rect class="chart-hit" id="chart-hit" x="82" y="25" width="888" height="275" tabindex="0" aria-label="Interactive load-duration curve. Use the slider below to inspect a ranked hour."></rect>
+          </svg>
+            <div class="chart-tooltip" id="chart-tooltip" role="status" hidden></div>
+          </div>
+          <aside class="rank-note"><strong>Reading the ranks</strong>Rank 1 is the highest-demand hour; rank 8,760 is the lowest. These are sorted positions, not times or dates.</aside>
+        </div>
+        <div class="range-row">
+          <label for="rank-slider">Inspect a ranked hour</label>
+          <input id="rank-slider" type="range" min="1" max="8760" value="1" step="1" aria-describedby="rank-output">
+          <output class="range-value" id="rank-output" for="rank-slider">Rank 1 · 4,813 MW · 4,813 MWh in one hour</output>
+        </div>
+        <p class="chart-note">Demand is average power in MW. Since each observation covers one hour, the same numeric value is that interval's energy in MWh (for example, 1 MW for 1 hour = 1 MWh).</p>
+        <p class="data-status" id="data-status" aria-live="polite">Saved data verified: 8,760 ranked hourly observations.</p>
+        <noscript><p class="noscript">JavaScript is required to draw the interactive curve. The saved demand statistics remain shown above.</p></noscript>
+      </section>
+
+      <section class="section" id="options" aria-labelledby="options-title">
+        <div class="section-heading">
+          <span class="section-number">03</span>
+          <h2 id="options-title">Generator options &amp; saved result</h2>
+        </div>
+        <p class="options-intro">The saved cost table gives each option's annual fixed cost and variable operating cost. Fixed cost is capital recovery plus fixed O&amp;M; variable cost is variable O&amp;M plus fuel.</p>
+        <div class="cost-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Technology</th>
+                <th scope="col">Annual fixed cost<br><span class="cost-unit">$/MW-year</span></th>
+                <th scope="col">Variable operating cost<br><span class="cost-unit">$/MWh</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Geothermal</td><td>$595,700</td><td>$0.00</td></tr>
+              <tr><td>Coal</td><td>$330,400</td><td>$21.20</td></tr>
+              <tr><td>Natural gas · CCGT</td><td>$81,800</td><td>$21.50</td></tr>
+              <tr><td>Natural gas · CT</td><td>$62,600</td><td>$32.50</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="tradeoff">
+          <p><strong>Pay for capacity or pay to run?</strong> Geothermal and coal have higher annual fixed costs. CCGT's relatively low variable cost makes it economical to run for many hours once built.</p>
+          <p><strong>Covering peaks.</strong> CT has the lowest fixed cost of these thermal options but the highest variable cost, suiting infrequent use. The notebook's solved case therefore favors CCGT for most energy and CT for peaks.</p>
+        </div>
+        <p class="approx-note"><strong>Saved narrative conclusion:</strong> Under these cost assumptions, the saved thermal-only solution favors CCGT for most annual electricity generation and CT for demand peaks. Exact capacity and generation results were not saved in the notebook's results table.</p>
+      </section>
+
+      <section class="section" id="extensions" aria-labelledby="extensions-title">
+        <div class="section-heading">
+          <span class="section-number">04</span>
+          <h2 id="extensions-title">How the lesson extends</h2>
+        </div>
+        <p class="section-lead">The decision framework can grow, but these next formulations are explanatory extensions in the notebook, not solved cases.</p>
+        <div class="extension-grid">
+          <article class="extension">
+            <span class="status">Described · not solved here</span>
+            <h3>Wind &amp; solar availability</h3>
+            <p>Renewable output is limited by the weather-dependent availability in each hour and may be curtailed.</p>
+            <code class="formula">Maximum renewable output = installed capacity × hourly availability</code>
+            <p>The notebook shows example January and July availability plots, but no renewable expansion optimization result is saved.</p>
+          </article>
+          <article class="extension">
+            <span class="status">Described · not solved here</span>
+            <h3>Existing plants &amp; retirements</h3>
+            <p>Brownfield planning starts with today's fleet, chooses new capacity, and may retire existing capacity. Past construction spending is sunk; ongoing avoidable fixed costs matter.</p>
+          </article>
+          <article class="extension">
+            <span class="status" style="color: var(--lime);">Implemented · solved</span>
+            <h3>Thermal-only greenfield case</h3>
+            <p>The notebook's solved model builds from zero existing capacity and chooses among geothermal, coal, CCGT, and CT. The saved HiGHS status is optimal.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="assumptions" aria-labelledby="assumptions-title">
+        <h2 id="assumptions-title">Keep in mind</h2>
+        <p>The solved case assumes no existing generation capacity. It omits energy storage, ramp limits, network constraints, unit commitment, and operating reserves. Demand is treated as inelastic, with non-served energy represented by a penalty. This dashboard presents saved notebook information only; it does not solve new scenarios.</p>
+      </section>
+    </main>
+    <footer>Source: “03-Basic-Capacity-Expansion.ipynb” · Illustrative cost assumptions · Demand series described as 2012 San Diego Gas &amp; Electric load.</footer>
+  </div>
+
+  <script>
+    // Notebook cells 8 and 38: saved generator cost table; cell 15: the 8,760-point CDF trace;
+    // cell 17: saved demand summary; cell 33: HiGHS log; cell 35: approximate prose results.
+    // Cell 34 has no saved output, so exact capacity, generation, and NSE totals are not shown.
+    const demandGzipBase64 = [
+      "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"
+    ].join("");
+
+    const chart = document.getElementById("demand-chart");
+    const chartFrame = document.getElementById("chart-frame");
+    const slider = document.getElementById("rank-slider");
+    const rankOutput = document.getElementById("rank-output");
+    const tooltip = document.getElementById("chart-tooltip");
+    const marker = document.getElementById("curve-marker");
+    const dataStatus = document.getElementById("data-status");
+    const numberFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+    let demandDescending = [];
+
+    function pointForRank(rank) {
+      const x = 82 + ((rank - 1) / (demandDescending.length - 1)) * 888;
+      const y = 300 - (demandDescending[rank - 1] / 5000) * 275;
+      return { x, y };
+    }
+
+    function selectRank(rank, showTooltip = false, pointer = null) {
+      if (!demandDescending.length) return;
+      const boundedRank = Math.max(1, Math.min(demandDescending.length, Math.round(rank)));
+      const mw = demandDescending[boundedRank - 1];
+      const mwh = mw;
+      const point = pointForRank(boundedRank);
+      marker.setAttribute("cx", point.x.toFixed(2));
+      marker.setAttribute("cy", point.y.toFixed(2));
+      slider.value = String(boundedRank);
+      rankOutput.textContent = `Rank ${numberFormat.format(boundedRank)} · ${numberFormat.format(mw)} MW · ${numberFormat.format(mwh)} MWh in one hour`;
+      tooltip.innerHTML = `<strong>Rank ${numberFormat.format(boundedRank)}</strong><br>${numberFormat.format(mw)} MW average power<br>${numberFormat.format(mwh)} MWh in one hour`;
+
+      if (showTooltip) {
+        tooltip.hidden = false;
+        const bounds = chartFrame.getBoundingClientRect();
+        const proposedX = pointer ? pointer.clientX - bounds.left : (point.x / 1000) * bounds.width;
+        const proposedY = pointer ? pointer.clientY - bounds.top : 35;
+        tooltip.style.left = `${Math.max(8, Math.min(bounds.width - 170, proposedX + 10))}px`;
+        tooltip.style.top = `${Math.max(8, Math.min(bounds.height - 70, proposedY - 38))}px`;
+      }
+    }
+
+    async function initializeDemandChart() {
+      try {
+        const binary = atob(demandGzipBase64);
+        const compressed = Uint8Array.from(binary, character => character.charCodeAt(0));
+        const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream("gzip"));
+        const ascending = JSON.parse(await new Response(stream).text());
+        const isSorted = ascending.every((value, index) => Number.isFinite(value) && (index === 0 || value >= ascending[index - 1]));
+        if (ascending.length !== 8760 || !isSorted || ascending[0] !== 1306 || ascending[ascending.length - 1] !== 4813) {
+          throw new Error("Saved demand series failed its length or ordering check.");
+        }
+
+        const minimumDemand = ascending[0];
+        const peakDemand = ascending[ascending.length - 1];
+        demandDescending = ascending.slice().reverse();
+        const sum = demandDescending.reduce((total, value) => total + value, 0);
+        const mean = sum / demandDescending.length;
+        const path = demandDescending.map((value, index) => {
+          const point = pointForRank(index + 1);
+          return `${index === 0 ? "M" : "L"}${point.x.toFixed(2)},${point.y.toFixed(2)}`;
+        }).join(" ");
+        document.getElementById("curve-line").setAttribute("d", path);
+        document.getElementById("curve-area").setAttribute("d", `${path} L970,300 L82,300 Z`);
+        document.getElementById("stat-min").textContent = numberFormat.format(minimumDemand);
+        document.getElementById("stat-mean").textContent = numberFormat.format(mean);
+        document.getElementById("stat-peak").textContent = numberFormat.format(peakDemand);
+        selectRank(1);
+      } catch (error) {
+        dataStatus.textContent = "The saved demand series could not be decoded in this browser; no replacement data are used.";
+        dataStatus.style.color = "var(--orange)";
+        console.error(error);
+      }
+    }
+
+    slider.addEventListener("input", () => selectRank(Number(slider.value), true));
+    chart.addEventListener("pointermove", event => {
+      if (!demandDescending.length || event.pointerType === "touch") return;
+      const bounds = chart.getBoundingClientRect();
+      const svgX = ((event.clientX - bounds.left) / bounds.width) * 1000;
+      const rank = 1 + ((svgX - 82) / 888) * (demandDescending.length - 1);
+      selectRank(rank, true, event);
+    });
+    chart.addEventListener("pointerleave", () => { tooltip.hidden = true; });
+    chart.addEventListener("focus", () => selectRank(Number(slider.value), true), true);
+    window.addEventListener("resize", () => { tooltip.hidden = true; });
+    initializeDemandChart();
+  </script>
+</body>
+</html>

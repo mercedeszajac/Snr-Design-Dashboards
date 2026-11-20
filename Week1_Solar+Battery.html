@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>
+            Solar + Battery · Energy Explorer
+        </title>
+        <style>
+            /* === Theme and page layout === */
+            :root {
+                color-scheme: dark;
+                --bg: #0b121b;
+                --panel: #141f2d;
+                --muted: #a9b8ca;
+                --line: #2c3a4b;
+                --solar: #ffd166;
+                --grid: #57d6c5;
+                --demand: #b6a5ff;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                background: radial-gradient(ellipse at top right,#172d36,transparent 55%),var(--bg);
+                color: #f3f7fc;
+                font: 15px/1.5 system-ui,sans-serif;
+            }
+            main {
+                max-width: 1160px;
+                margin: auto;
+                padding: 25px 30px;
+            }
+            header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 20px;
+                margin-bottom: 20px;
+            }
+            .eyebrow {
+                color: var(--grid);
+                font-size: 11px;
+                font-weight: 750;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+            }
+            h1 {
+                font-size: 30px;
+                letter-spacing: -1px;
+                margin: 3px 0;
+            }
+            p {
+                margin: 0;
+                color: var(--muted);
+            }
+            .badge {
+                border: 1px solid #3c505a;
+                border-radius: 30px;
+                padding: 7px 12px;
+                font-size: 12px;
+                white-space: nowrap;
+                color: #c5d6df;
+            }
+            /* === Controls === */
+            .controls {
+                display: grid;
+                grid-template-columns: 1fr 1fr auto;
+                gap: 30px;
+                align-items: center;
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                padding: 17px 22px;
+            }
+            .label {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                font-weight: 600;
+            }
+            .label output {
+                font-size: 21px;
+                font-variant-numeric: tabular-nums;
+            }
+            .unit {
+                font-size: 12px;
+                color: var(--muted);
+                font-weight: 400;
+            }
+            input[type=range] {
+                width: 100%;
+                margin: 12px 0 0;
+                accent-color: var(--solar);
+                cursor: pointer;
+            }
+            #battery {
+                accent-color: var(--grid);
+            }
+            .range {
+                display: flex;
+                justify-content: space-between;
+                font-size: 11px;
+                color: var(--muted);
+            }
+            button {
+                background: #233448;
+                border: 1px solid #485b71;
+                color: #f3f7fc;
+                border-radius: 8px;
+                padding: 10px 16px;
+                font: inherit;
+                cursor: pointer;
+            }
+            button:hover {
+                background: #31465e;
+            }
+            button:focus-visible,input:focus-visible,.chart:focus-visible {
+                outline: 2px solid var(--solar);
+                outline-offset: 4px;
+            }
+            /* === Daily summary cards === */
+            .cards {
+                display: grid;
+                grid-template-columns: repeat(3,1fr);
+                gap: 14px;
+                margin: 16px 0;
+            }
+            .card {
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 12px;
+                padding: 14px 20px;
+            }
+            .card p {
+                font-size: 12px;
+            }
+            .number {
+                font-size: 30px;
+                line-height: 1.35;
+                font-weight: 650;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: -1px;
+            }
+            .number small {
+                font-size: 14px;
+                letter-spacing: 0;
+                font-weight: 450;
+            }
+            .solar {
+                color: var(--solar);
+            }
+            .grid {
+                color: var(--grid);
+            }
+            .demand {
+                color: var(--demand);
+            }
+            /* === Graph and model notes === */
+            .plot-panel {
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 14px;
+                padding: 17px 20px 10px;
+            }
+            .plot-header {
+                display: flex;
+                justify-content: space-between;
+                gap: 14px;
+                align-items: center;
+            }
+            h2 {
+                font-size: 16px;
+                margin: 0;
+            }
+            .legend {
+                display: flex;
+                gap: 18px;
+                flex-wrap: wrap;
+                font-size: 12px;
+                color: #d9e3ef;
+            }
+            .legend span:before {
+                content: '';
+                display: inline-block;
+                width: 19px;
+                height: 3px;
+                background: currentColor;
+                vertical-align: middle;
+                margin-right: 6px;
+            }
+            .chart {
+                position: relative;
+                margin-top: 8px;
+                touch-action: pan-y;
+            }
+            svg {
+                display: block;
+                width: 100%;
+                height: auto;
+                overflow: visible;
+            }
+            svg text {
+                font-family: system-ui,sans-serif;
+                fill: var(--muted);
+                font-size: 12px;
+            }
+            .detail {
+                min-height: 28px;
+                font-size: 12px;
+                color: #d3dfeb;
+                padding-left: 5px;
+            }
+            .assumptions {
+                padding: 13px 3px 0;
+                font-size: 12px;
+                line-height: 1.7;
+            }
+            .assumptions strong {
+                color: #d5e0ed;
+            }
+            .footer {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 9px;
+                font-size: 11px;
+                color: #899bb0;
+            }
+            /* === Responsive layout === */
+            @media(min-width:900px) and (max-height:800px) {
+                main {
+                    padding-top: 15px;
+                }
+                header {
+                    margin-bottom: 12px;
+                }
+                .controls {
+                    padding: 12px 20px;
+                }
+                .cards {
+                    margin: 12px 0;
+                }
+                .card {
+                    padding: 10px 20px;
+                }
+            }
+            @media(max-width:700px) {
+                main {
+                    padding: 18px;
+                }
+                header {
+                    align-items: start;
+                }
+                .badge {
+                    display: none;
+                }
+                .controls {
+                    grid-template-columns: 1fr;
+                    gap: 15px;
+                }
+                .cards {
+                    gap: 8px;
+                }
+                .card {
+                    padding: 12px;
+                }
+                .number {
+                    font-size: 24px;
+                }
+                .plot-header {
+                    display: block;
+                }
+                .legend {
+                    gap: 12px;
+                    margin-top: 10px;
+                }
+                .footer {
+                    display: block;
+                }
+                h1 {
+                    font-size: 27px;
+                }
+            }
+            /* === Grid source mix === */
+            .mix-panel {
+                margin-top: 14px;
+                padding: 14px 20px;
+                background: var(--panel);
+                border: 1px solid var(--line);
+                border-radius: 14px;
+            }
+            .mix-note {
+                font-size: 11px;
+                margin-top: 5px;
+            }
+            .source-mix {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+                margin: 10px 0;
+            }
+            .source {
+                border-left: 2px solid var(--grid);
+                padding-left: 10px;
+                font-size: 12px;
+            }
+            .source strong {
+                display: block;
+                font-size: 17px;
+                font-variant-numeric: tabular-nums;
+            }
+            .source span {
+                color: var(--muted);
+            }
+            @media (max-width: 700px) {
+                .source-mix {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <!-- Title and introduction -->
+            <header>
+                <div>
+                    <div class="eyebrow">
+                        Energy explorer / classroom edition
+                    </div>
+                    <h1>
+                        Solar + Battery
+                    </h1>
+                    <p>
+                        Explore how sunshine and stored energy power a home over one day.
+                    </p>
+                </div>
+                <span class="badge">
+                    Sample data · 24-hour day
+                </span>
+            </header>
+            <!-- Solar and battery controls -->
+            <section class="controls" aria-label="System settings">
+                <div>
+                    <div class="label">
+                        <label for="solar">
+                            Solar capacity
+                        </label>
+                        <div>
+                            <output id="solarValue" for="solar">
+                                5.0
+                            </output>
+                            <span class="unit">
+                                kW
+                            </span>
+                        </div>
+                    </div>
+                    <input id="solar" type="range" min="0" max="10" step="0.5" value="5">
+                    <div class="range">
+                        <span>
+                            0 kW
+                        </span>
+                        <span>
+                            10 kW
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <div class="label">
+                        <label for="battery">
+                            Battery capacity
+                        </label>
+                        <div>
+                            <output id="batteryValue" for="battery">
+                                10.0
+                            </output>
+                            <span class="unit">
+                                kWh
+                            </span>
+                        </div>
+                    </div>
+                    <input id="battery" type="range" min="0" max="20" step="0.5" value="10">
+                    <div class="range">
+                        <span>
+                            0 kWh
+                        </span>
+                        <span>
+                            20 kWh
+                        </span>
+                    </div>
+                </div>
+                <button id="reset" type="button">
+                    ↺ Reset
+                </button>
+            </section>
+            <!-- Daily results -->
+            <section class="cards" aria-label="Daily results" aria-live="polite" aria-atomic="true">
+                <article class="card">
+                    <p>
+                        Daily solar production
+                    </p>
+                    <div class="number solar">
+                        <span id="production">
+                            0.0
+                        </span>
+                        <small>
+                            kWh
+                        </small>
+                    </div>
+                </article>
+                <article class="card">
+                    <p>
+                        Grid electricity purchased
+                    </p>
+                    <div class="number grid">
+                        <span id="purchased">
+                            0.0
+                        </span>
+                        <small>
+                            kWh
+                        </small>
+                    </div>
+                </article>
+                <article class="card">
+                    <p>
+                        Demand supplied by solar + storage
+                    </p>
+                    <div class="number demand">
+                        <span id="supplied">
+                            0.0
+                        </span>
+                        <small>
+                            %
+                        </small>
+                    </div>
+                </article>
+            </section>
+            <!-- Interactive 24-hour power graph -->
+            <section class="plot-panel" aria-labelledby="plotTitle">
+                <div class="plot-header">
+                    <h2 id="plotTitle">
+                        A day in the life of your home
+                    </h2>
+                    <div class="legend">
+                        <span class="demand">
+                            Household demand
+                        </span>
+                        <span class="solar">
+                            Solar generation
+                        </span>
+                        <span class="grid">
+                            Grid demand
+                        </span>
+                    </div>
+                </div>
+                <div class="chart" id="chart" tabindex="0" role="group" aria-label="Hourly power graph. Hover or tap to inspect. Use left and right arrow keys to inspect hours." aria-describedby="details">
+                    <svg id="graph" viewBox="0 0 1060 290" role="img" aria-labelledby="graphTitle graphDesc">
+                        <title id="graphTitle">
+                            24-hour household, solar, and grid power
+                        </title>
+                        <desc id="graphDesc">
+                            Power in kilowatts for hourly intervals from midnight to 11 pm. Use the interactive details below to inspect each hour.
+                        </desc>
+                        <g id="axes">
+                        </g>
+                        <g id="lines">
+                        </g>
+                        <g id="cursor" style="display:none">
+                            <line id="guide" y1="20" y2="238" stroke="#8192a8" stroke-dasharray="4 5"/>
+                            </line>
+                            <g id="dots">
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div id="details" class="detail" aria-live="polite">
+                    Hover over the graph to explore an hour. Keyboard: focus the graph, then use ← / →.
+                </div>
+            </section>
+            <!-- Grid source allocation: fixed illustrative shares -->
+            <section class="mix-panel" aria-labelledby="mixTitle">
+                <h2 id="mixTitle">
+                    Grid electricity source mix
+                </h2>
+                <p class="mix-note">
+                    Illustrative mix—not live regional data or a prediction of the electricity delivered to this home.
+                </p>
+                <div id="sourceMix" class="source-mix" aria-live="polite" aria-atomic="true">
+                </div>
+                <p class="mix-note">
+                    Actual grid mix varies by location and time. These fixed shares allocate daily grid purchases for illustration; displayed amounts may differ slightly due to rounding.
+                </p>
+            </section>
+            <!-- Model assumptions and classroom prompt -->
+            <div class="assumptions">
+                <strong>
+                    Sample data · simplified demonstration model.
+                </strong>
+                One person sleeps 11 pm–7 am and works remotely 9 am–5 pm. The illustrative, unmeasured demand includes continuous background loads, modest morning activity, home-office use, and higher evening activity. Household demand stays positive overnight; grid demand can be zero when solar or storage covers it. Each point represents the average power for one hour (kW × 1 hour = kWh). Solar serves the home first; surplus charges an initially empty battery. Stored solar then covers later shortfalls, with the grid supplying the rest. Battery efficiency is 100%, with no charge or discharge power limits. Surplus beyond battery capacity is exported and excluded from the household supply percentage. Energy left in the battery at midnight is not counted as supplied.
+            </div>
+            <div class="footer">
+                <span>
+                    Try setting the battery to zero. What happens after sunset?
+                </span>
+                <span id="dailyDemand">
+                </span>
+            </div>
+        </main>
+        <script>
+            'use strict';
+
+            // === 1. Sample data and adjustable assumptions ===
+            // Index 0 = midnight-1 am. Values are average household power in kW, not measured data.
+            const householdDemandKw = [
+                0.30, 0.27, 0.25, 0.26, 0.28, 0.30, 0.34, // 12 am-7 am: sleeping, background loads
+                0.85, 0.65,                               // 7-9 am: breakfast and morning activity
+                0.60, 0.66, 0.62, 0.95, 0.70, 0.63, 0.68, 0.60, // 9 am–5 pm: home office, lunch
+                1.05, 1.65, 1.45, 1.10, 0.85, 0.55,       // 5-11 pm: cooking and evening activity
+                0.32                                      // 11 pm-midnight: sleeping
+            ];
+            // Fraction of panel capacity generated in each hour of an illustrative sunny day.
+            const solarProfile = [
+                0, 0, 0, 0, 0, 0, 0.04, 0.15, 0.35, 0.58, 0.76, 0.88,
+                0.94, 0.88, 0.74, 0.55, 0.32, 0.12, 0.02, 0, 0, 0, 0, 0
+            ];
+            const assumptions = {
+                intervalHours: 1,
+                initialBatteryKwh: 0,
+                defaultSolarKw: 5,
+                defaultBatteryKwh: 10
+            };
+            // Fixed illustrative percentages, independent of solar and battery settings.
+            const gridSources = [
+                { name: 'Natural gas', percent: 40 },
+                { name: 'Nuclear', percent: 25 },
+                { name: 'Coal', percent: 15 },
+                { name: 'Renewables', percent: 20 }
+            ];
+
+            // === 2. Energy calculations (independent of the page and graph) ===
+            const sum = values => values.reduce((total, value) => total + value, 0);
+
+            // Simulate a fresh day, tracking energy transfers in kWh for every one-hour interval.
+            function calculateEnergy(solarCapacityKw, batteryCapacityKwh) {
+                let batteryChargeKwh = assumptions.initialBatteryKwh;
+                const hours = householdDemandKw.map((demandKw, hour) => {
+                    const demandKwh = demandKw * assumptions.intervalHours;
+                    const solarKw = solarProfile[hour] * solarCapacityKw;
+                    const solarKwh = solarKw * assumptions.intervalHours;
+                    const directSolarKwh = Math.min(demandKwh, solarKwh);
+                    const surplusSolarKwh = solarKwh - directSolarKwh;
+                    const unmetDemandKwh = demandKwh - directSolarKwh;
+
+                    // Only surplus solar charges the battery. Ideal efficiency; no power limits.
+                    const batteryChargedKwh = Math.min(surplusSolarKwh, batteryCapacityKwh - batteryChargeKwh);
+                    batteryChargeKwh += batteryChargedKwh;
+                    const batterySuppliedKwh = Math.min(unmetDemandKwh, batteryChargeKwh);
+                    batteryChargeKwh = Math.max(0, Math.min(batteryCapacityKwh, batteryChargeKwh - batterySuppliedKwh));
+                    const gridKwh = Math.max(0, unmetDemandKwh - batterySuppliedKwh);
+                    const exportedKwh = Math.max(0, surplusSolarKwh - batteryChargedKwh);
+
+                    return {
+                        hour, demandKw, demandKwh, solarKw, solarKwh, directSolarKwh,
+                        batteryChargedKwh, batterySuppliedKwh, batteryChargeKwh,
+                        gridKwh, gridKw: gridKwh / assumptions.intervalHours, exportedKwh
+                    };
+                });
+                const dailyDemandKwh = sum(hours.map(hour => hour.demandKwh));
+                const solarProductionKwh = sum(hours.map(hour => hour.solarKwh));
+                const gridPurchasedKwh = sum(hours.map(hour => hour.gridKwh));
+                // Count energy only when it serves the home: charging is not household supply.
+                const solarSuppliedKwh = sum(hours.map(hour => hour.directSolarKwh + hour.batterySuppliedKwh));
+                return {
+                    hours, dailyDemandKwh, solarProductionKwh, gridPurchasedKwh,
+                    solarSuppliedPercent: 100 * solarSuppliedKwh / dailyDemandKwh,
+                    sourceMix: allocateGridSources(gridPurchasedKwh)
+                };
+            }
+
+            // Apply each fixed share to purchases. Zero purchases gives zero for every source.
+            function allocateGridSources(gridPurchasedKwh) {
+                return gridSources.map(source => ({
+                    ...source,
+                    energyKwh: gridPurchasedKwh * source.percent / 100
+                }));
+            }
+
+            // === 3. Graph drawing ===
+            const getElement = id => document.getElementById(id);
+            const graphLayout = { left: 62, right: 1038, top: 20, bottom: 238, width: 1060, maxPowerKw: 10 };
+            const graphSeries = [
+                { key: 'demandKw', color: '#b6a5ff', dash: '7 4' },
+                { key: 'solarKw', color: '#ffd166', dash: '' },
+                { key: 'gridKw', color: '#57d6c5', dash: '' }
+            ];
+            let currentResults;
+            let selectedHour = null;
+
+            // Convert hours and power to SVG coordinates; a fixed scale aids slider comparisons.
+            function graphX(hour) {
+                return graphLayout.left + hour / 23 * (graphLayout.right - graphLayout.left);
+            }
+            function graphY(powerKw) {
+                return graphLayout.bottom - powerKw / graphLayout.maxPowerKw * (graphLayout.bottom - graphLayout.top);
+            }
+
+            // Create one SVG shape or label with the supplied attributes.
+            function appendSvg(tag, attributes, parent) {
+                const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+                Object.entries(attributes).forEach(([name, value]) => node.setAttribute(name, value));
+                parent.appendChild(node);
+                return node;
+            }
+
+            // Draw static grid lines and labeled axes once when the page loads.
+            function drawAxes() {
+                const axes = getElement('axes');
+                for (let power = 0; power <= graphLayout.maxPowerKw; power += 2) {
+                    appendSvg('line', {
+                        x1: graphLayout.left, x2: graphLayout.right,
+                        y1: graphY(power), y2: graphY(power), stroke: '#2c3a4b'
+                    }, axes);
+                    appendSvg('text', {
+                        x: graphLayout.left - 12, y: graphY(power) + 4, 'text-anchor': 'end'
+                    }, axes).textContent = power;
+                }
+                [0, 3, 6, 9, 12, 15, 18, 21, 23].forEach(hour => {
+                    appendSvg('text', { x: graphX(hour), y: 260, 'text-anchor': 'middle' }, axes)
+                        .textContent = formatHour(hour);
+                });
+                appendSvg('text', { x: 550, y: 285, 'text-anchor': 'middle' }, axes)
+                    .textContent = 'Time of day (hour starting)';
+                appendSvg('text', { transform: 'translate(17 130) rotate(-90)', 'text-anchor': 'middle' }, axes)
+                    .textContent = 'Power (kW)';
+            }
+
+            // Replace the three lines using the latest calculated hourly power values.
+            function drawGraph(results) {
+                getElement('lines').replaceChildren();
+                graphSeries.forEach(series => {
+                    const path = results.hours.map((hour, index) =>
+                        `${index === 0 ? 'M' : 'L'}${graphX(index)},${graphY(hour[series.key])}`
+                    ).join(' ');
+                    appendSvg('path', {
+                        d: path, fill: 'none', stroke: series.color, 'stroke-width': 3,
+                        'stroke-dasharray': series.dash, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+                    }, getElement('lines'));
+                });
+            }
+
+            // === 4. Interface updates and interaction ===
+            function formatHour(hour) {
+                return String(hour).padStart(2, '0') + ':00';
+            }
+
+            // Show the selected hour, including battery energy at the end of that interval.
+            function showHourDetails(hourIndex) {
+                selectedHour = hourIndex;
+                const hour = currentResults.hours[hourIndex];
+                getElement('cursor').style.display = '';
+                getElement('guide').setAttribute('x1', graphX(hourIndex));
+                getElement('guide').setAttribute('x2', graphX(hourIndex));
+                getElement('dots').replaceChildren();
+                graphSeries.forEach(series => {
+                    appendSvg('circle', {
+                        cx: graphX(hourIndex), cy: graphY(hour[series.key]), r: 4,
+                        fill: series.color, stroke: '#141f2d', 'stroke-width': 2
+                    }, getElement('dots'));
+                });
+                getElement('details').textContent =
+                    `${formatHour(hourIndex)}–${formatHour(hourIndex + 1)} · ` +
+                    `Home ${hour.demandKw.toFixed(2)} kW · Solar ${hour.solarKw.toFixed(2)} kW · ` +
+                    `Grid ${hour.gridKw.toFixed(2)} kW · Battery at hour end ${hour.batteryChargeKwh.toFixed(2)} kWh`;
+            }
+
+            // Update summary cards and the illustrative source allocation from the same results.
+            function updateSummary(results) {
+                getElement('production').textContent = results.solarProductionKwh.toFixed(1);
+                getElement('purchased').textContent = results.gridPurchasedKwh.toFixed(1);
+                getElement('supplied').textContent = results.solarSuppliedPercent.toFixed(1);
+                getElement('dailyDemand').textContent = `Sample household demand: ${results.dailyDemandKwh.toFixed(1)} kWh / day`;
+                getElement('sourceMix').replaceChildren();
+                results.sourceMix.forEach(source => {
+                    const item = document.createElement('div');
+                    item.className = 'source';
+                    const label = document.createElement('span');
+                    label.textContent = `${source.name} · ${source.percent}%`;
+                    const quantity = document.createElement('strong');
+                    quantity.textContent = `${source.energyKwh.toFixed(2)} kWh`;
+                    item.append(label, quantity);
+                    getElement('sourceMix').appendChild(item);
+                });
+            }
+
+            // Read the sliders, calculate a fresh day, and refresh all dependent displays.
+            function updateDashboard() {
+                const solarCapacityKw = Number(getElement('solar').value);
+                const batteryCapacityKwh = Number(getElement('battery').value);
+                getElement('solarValue').value = solarCapacityKw.toFixed(1);
+                getElement('batteryValue').value = batteryCapacityKwh.toFixed(1);
+                currentResults = calculateEnergy(solarCapacityKw, batteryCapacityKwh);
+                updateSummary(currentResults);
+                drawGraph(currentResults);
+                if (selectedHour !== null) showHourDetails(selectedHour);
+            }
+
+            // Translate a pointer position to the nearest hour, clamped to the graph's range.
+            function handleGraphPointer(event) {
+                const bounds = getElement('graph').getBoundingClientRect();
+                const svgX = (event.clientX - bounds.left) / bounds.width * graphLayout.width;
+                const hour = Math.round((svgX - graphLayout.left) / (graphLayout.right - graphLayout.left) * 23);
+                showHourDetails(Math.max(0, Math.min(23, hour)));
+            }
+
+            // Restore default capacities; the reset also recalculates cards and source amounts.
+            function resetDashboard() {
+                getElement('solar').value = assumptions.defaultSolarKw;
+                getElement('battery').value = assumptions.defaultBatteryKwh;
+                updateDashboard();
+            }
+
+            // Connect mouse, touch, keyboard, and slider controls, then draw the initial state.
+            function initializeDashboard() {
+                ['solar', 'battery'].forEach(id => getElement(id).addEventListener('input', updateDashboard));
+                getElement('reset').addEventListener('click', resetDashboard);
+                getElement('chart').addEventListener('pointermove', handleGraphPointer);
+                getElement('chart').addEventListener('pointerdown', handleGraphPointer);
+                getElement('chart').addEventListener('keydown', event => {
+                    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                        event.preventDefault();
+                        const direction = event.key === 'ArrowRight' ? 1 : -1;
+                        showHourDetails(Math.max(0, Math.min(23, (selectedHour ?? 0) + direction)));
+                    }
+                });
+                drawAxes();
+                resetDashboard();
+            }
+
+            initializeDashboard();
+        </script>
+    </body>
+</html>
